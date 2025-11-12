@@ -55,8 +55,6 @@ abstract class Model{
         foreach ($values as $v) {
             if (is_int($v)) {
                 $types .= 'i';
-            } elseif (is_float($v)) {
-                $types .= 'd';
             } elseif (is_null($v)) {
                 // no dedicated NULL type; bind as 's' with null value is OK
                 $types .= 's';
@@ -76,6 +74,55 @@ abstract class Model{
  
     }
      
+
+    public static function update(mysqli $connection,int $id, array $data){
+
+        if(empty($data) || !is_array($data)){
+            throw new InvalidArgumentException('Data must be a non-empty array.');
+        }
+        $cols = array_keys($data);//("name", "color", "year")
+        $values = array_values($data); //("merc", "blue", "2025")
+            $setSql = implode(',', array_map(
+            fn($c) => '`' . str_replace('`','``',$c) . '` = ?',
+            $cols
+        ));//"?,?,?" 
+       
+         $sql = "UPDATE `" . static::$table . "` SET $setSql WHERE `"
+        . str_replace('`','``', static::$primary_key) . "` = ?";
+        $query = $connection->prepare($sql);
+        $types = '';
+
+        
+            foreach ($values as $v) {
+            if (is_int($v)) {
+                $types .= 'i';
+            }elseif (is_null($v)) {
+                // no dedicated NULL type; bind as 's' with null value is OK
+                $types .= 's';
+            } else {
+                $types .= 's';
+            }
+        }
+        $types .= 'i'; // for id
+        $bindValues = array_merge($values, [$id]);
+        $query->bind_param($types, ...$bindValues);
+        $query->execute();
+        $query->close();
+    }
+
+    public static function delete(mysqli $connection, int $id){
+
+
+        $sql = sprintf("DELETE FROM %s WHERE %s = ?",
+                static::$table,
+                static::$primary_key);
+        $query = $connection->prepare($sql);
+        $query->bind_param("i", $id);
+        $query->execute();
+
+        if(!$query){return "fail to delete";
+        }
+    }
 
 }
 

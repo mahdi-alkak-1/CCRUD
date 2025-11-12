@@ -55,7 +55,7 @@ function insertCar(string $name, string $color, string $year){
     }   
     
 }
-insertCar('sherokee','black','2019');
+//insertCar('sherokee','black','2019');
 
 function updateCar(string $name, string $color, string $year){  
     global $connection;
@@ -64,18 +64,29 @@ function updateCar(string $name, string $color, string $year){
         $id = $_GET['id'];
     }
 
-    // $car_info = [];
-    // $car_info[] = $id;
-    // $car_info[] = $name;
-    // $car_info[] = $color;
-    // $car_info[] = $year;
-    // var_dump($car_info);
+    $data = [];
 
-    Car::update($connection,$id,$name,$color,$year);
-
-    echo ResponseService::response(200,"row is Updated");
+    if($name !== ''){
+        $data['name'] = $name;
+    }
+    if($color !== ''){
+        $data['color'] = $color;
+    }
+    if($year !== ''){
+        $data['year'] = $year;
+    }
+  var_dump($data);
+    if(empty($data)){
+        echo ResponseService::response(400, "No fields to update");
+        return;
+    }
+    try{
+        $result = Car::update($connection, $id, $data);
+    }catch(error){
+        echo ResponsiveService::response(500,"Update failed");
+    }
 }
-//updateCar("hawawee", "blue", "2018");
+updateCar("nabiha", "red", "2018");
 
 function deleteCar(){
     global $connection;
