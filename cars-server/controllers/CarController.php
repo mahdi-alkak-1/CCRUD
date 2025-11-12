@@ -37,12 +37,27 @@ function getCars(){
 
 function insertCar(string $name, string $color, string $year){
     global $connection;
-    $insert = Car::create($connection,$name, $color, $year);
-    echo ResponseService::response(200,"Data is inserted succ");
-}
-//insertCar('bmw','white','2025');
 
-function updateCar(string $name, string $color, string $year){
+        if ($name === '' || $color === '' || $year === '') {
+        echo ResponseService::response(400, "Missing fields");
+        return;
+    }
+
+    $data =['name' => $name, 'color' => $color, 'year' => $year];
+
+    $insert = Car::create($connection,$data);
+    try{
+        if($insert){
+            echo ResponseService::response(200,"Data is inserted succ");
+        }
+    }catch(error){
+        echo ResponseService::response(500," insert failed");
+    }   
+    
+}
+insertCar('sherokee','black','2019');
+
+function updateCar(string $name, string $color, string $year){  
     global $connection;
 
     if(isset($_GET['id'])){
@@ -71,7 +86,7 @@ function deleteCar(){
     Car::delete($connection, $id);
     echo ResponseService::response(200,"row is Deleted");
 }
-deleteCar();
+//deleteCar();
 //ToDO: 
 //transform getCarByID to getCars()
 //if the id is set? then we retrieve the specific car 
