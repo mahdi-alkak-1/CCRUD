@@ -38,42 +38,44 @@ abstract class Model{
         return $rows;
         
     }
-
-    public static function create(mysqli $connection, array $data[]){
-        $sql = sprintf("INSERT INTO %s (name,color,year) VALUES (?,?,?)", 
-                        static::$table);
-        $query = $connection->prepare($sql);
-        $query->bind_param("sss",$name,$color,$year);
-        $query->execute();
-        if(!$query){
-            return "fail to create";
+    
+    // $data = ['name'=>'merc', 'color'=>'blue','year'=>'2025']
+    public static function create(mysqli $connection,array $data)
+    {
+        if (empty($data) || !is_array($data)) {
+            throw new InvalidArgumentException('Data must be a non-empty array.');
         }
-    }
 
-    public static function update(mysqli $connection, int $id,string $name, string $color , string $year){
-        $sql = sprintf("UPDATE %s SET  name = ?, color = ?, year = ?   WHERE %s = ?",
-                        static::$table,
-                        static::$primary_key);
-        $query = $connection->prepare($sql);
-        $query->bind_param("sssi",$name,$color,$year, $id);
-        $query->execute();
-        
-        if(!$query){
-            return "fail to update";
+        $cols = array_keys($data);//("name", "color", "year")
+        $placeholder = implode(',', array_fill(0,count($cols), '?'));//"?,?,?" 
+        $values = array_values($data); //("merc", "blue", "2025")
+        $types = '';
+
+    
+        foreach ($values as $v) {
+            if (is_int($v)) {
+                $types .= 'i';
+            } elseif (is_float($v)) {
+                $types .= 'd';
+            } elseif (is_null($v)) {
+                // no dedicated NULL type; bind as 's' with null value is OK
+                $types .= 's';
+            } else {
+                $types .= 's';
+            }
         }
-    }
 
-    public static function delete(mysqli $connection, int $id){
-        $sql = sprintf("DELETE FROM %s WHERE %s = ?",
-                static::$table,
-                static::$primary_key);
+        $sql = "INSERT INTO " . static::$table .
+        "(" . implode(',', $cols) . ") VALUES ($placeholder)";// (name = merced , color = blue , year = 2025)
         $query = $connection->prepare($sql);
-        $query->bind_param("i", $id);
+        $query->bind_param($types, ...$values);
         $query->execute();
-
-        if(!$query){return "fail to delete";
-        }
+       
+        return $query->insert_id;
+         
+ 
     }
+     
 
 }
 
